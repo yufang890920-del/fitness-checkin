@@ -213,7 +213,7 @@ const PLAN = {
   1:{key:'strengthA', type:'力量', cls:'s', place:'🏋️ 健身房', focus:'力量 A · 下肢 + 核心', sub:'热身 5–10 分钟，再开始',
      ex:[['高脚杯深蹲','3 × 10–12'],['罗马尼亚硬拉（哑铃）','3 × 10'],['腿举机','3 × 12'],['坐姿划船','3 × 12'],['平板支撑','3 × 30–45 秒']],
      tip:'专注<b>肌肉发力</b>：动作放慢，感受目标肌肉在收缩，而不是甩重量——这是脑子和身体连起来的关键。'},
-  3:{key:'yoga', type:'瑜伽', cls:'y', place:'🧘 在家', focus:'瑜伽流 · 身心觉察', sub:'跟一个 40–60 分钟初学者流瑜伽视频', yogaVideo:'初学者 流瑜伽 全程',
+  3:{key:'yoga', type:'瑜伽', cls:'y', place:'🧘 在家', focus:'瑜伽流 · 身心觉察', sub:'跟 Yue Yoga 的初学者流瑜伽', yogaVideo:'https://www.bilibili.com/video/BV1xV411y7c2/',
      ex:[['拜日式','热身'],['下犬式','5 次呼吸'],['战士一 / 二','两侧'],['仰卧扭转','两侧'],['婴儿式','收尾放松']],
      tip:'全程<b>跟着呼吸走</b>，吸气展开、呼气收回。每个体式都问自己：现在哪块肌肉在拉伸？这正是在练你最弱的身体觉察。'},
   5:{key:'strengthB', type:'力量', cls:'s', place:'🏋️ 健身房', focus:'力量 B · 上肢推 + 拉', sub:'热身 5–10 分钟，再开始',
@@ -285,6 +285,9 @@ function load(){try{return JSON.parse(localStorage.getItem('fit_checkins')||'{}'
 function save(o){localStorage.setItem('fit_checkins',JSON.stringify(o));}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
 function biliLink(q){return 'https://search.bilibili.com/all?keyword='+encodeURIComponent(q);}
+const ZOEY_UID='62540916'; // 周六野 Zoey
+function bandLink(kw){return 'https://space.bilibili.com/'+ZOEY_UID+'/search/video?keyword='+encodeURIComponent(kw);}
+const ZKEY={'高脚杯深蹲':'深蹲','罗马尼亚硬拉（哑铃）':'臀腿','腿举机':'腿','坐姿划船':'背','平板支撑':'核心','哑铃卧推':'胸','高位下拉':'背','坐姿肩推（哑铃）':'肩','面拉':'肩','二头弯举 + 三头下压':'手臂','弹力绳深蹲':'弹力带 腿','弹力绳划船':'弹力带 背','弹力绳侧平举':'弹力带 肩'};
 
 let data=load();
 const dow=new Date().getDay();
@@ -313,7 +316,7 @@ function renderToday(){
         <div class="cues bad"><div class="t">⚠️ 常见错误</div><ul>${dd.bad.map(c=>`<li>${c}</li>`).join('')}</ul></div>
         <div class="ex-btns">
           <button class="rest-set" data-rest="${dd.rest}">用 ${dd.rest}s 间歇</button>
-          <a href="${biliLink(dd.v)}" target="_blank" rel="noopener">▶ 看视频示范</a>
+          <a href="${bandLink(ZKEY[name]||'弹力带')}" target="_blank" rel="noopener">▶ 看周六野示范</a>
         </div>
       </div>`;
     }
@@ -323,8 +326,8 @@ function renderToday(){
   });
   box.querySelectorAll('.rest-set').forEach(b=>b.onclick=(e)=>{e.stopPropagation();setTimer(parseInt(b.dataset.rest));startTimer();toast('计时开始：'+b.dataset.rest+' 秒');document.querySelector('.timer-card').scrollIntoView({behavior:'smooth',block:'center'});});
   if(plan.yogaVideo){
-    const a=document.createElement('a');a.href=biliLink(plan.yogaVideo);a.target='_blank';a.rel='noopener';
-    a.className='btn-ghost';a.style.display='block';a.style.textAlign='center';a.style.textDecoration='none';a.textContent='▶ 打开一个流瑜伽跟练视频';
+    const a=document.createElement('a');a.href=(plan.yogaVideo.indexOf('http')===0?plan.yogaVideo:biliLink(plan.yogaVideo));a.target='_blank';a.rel='noopener';
+    a.className='btn-ghost';a.style.display='block';a.style.textAlign='center';a.style.textDecoration='none';a.textContent='▶ 打开 Yue Yoga 跟练视频';
     document.getElementById('tip').parentNode.insertBefore(a,document.getElementById('tip'));
   }
   const nk=localStorage.getItem('fit_nick');if(nk)document.getElementById('nick').value=nk;

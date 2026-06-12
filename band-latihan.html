@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15231F">
+<title>弹力带训练 · Latihan Band</title>
+<style>
+  :root{
+    --bg:#EEF2EE;
+    --card:#FFFFFF;
+    --ink:#15231F;
+    --muted:#6B7A74;
+    --line:#DCE3DD;
+    --band:#FF4A2D;       /* A 日：红色弹力带 */
+    --band-soft:#FFE6E0;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  [data-day="B"]{
+    --band:#0E8C7F;       /* B 日：青色弹力带 */
+    --band-soft:#DCF0ED;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,"PingFang SC","Noto Sans SC",sans-serif;
+    min-height:100svh;
+    padding-bottom:96px;
+  }
+  .wrap{max-width:480px;margin:0 auto;padding:20px 16px 0;}
+
+  /* ---------- header ---------- */
+  header{padding:8px 2px 18px;}
+  .kicker{
+    font-family:var(--mono);
+    font-size:11px;letter-spacing:.18em;
+    color:var(--band);font-weight:700;
+    transition:color .3s;
+  }
+  h1{
+    font-size:30px;line-height:1.15;font-weight:800;
+    letter-spacing:-0.02em;margin-top:6px;
+  }
+  h1 .id{
+    display:block;font-size:14px;font-weight:600;
+    color:var(--muted);letter-spacing:.08em;margin-top:4px;
+  }
+  .note{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.5;}
+
+  /* ---------- day toggle ---------- */
+  .toggle{
+    display:flex;background:var(--card);border:1px solid var(--line);
+    border-radius:999px;padding:4px;margin:18px 0 6px;
+    position:sticky;top:10px;z-index:20;
+    box-shadow:0 6px 20px rgba(21,35,31,.08);
+  }
+  .toggle button{
+    flex:1;border:0;background:transparent;border-radius:999px;
+    padding:11px 0;font-size:14px;font-weight:700;color:var(--muted);
+    font-family:inherit;cursor:pointer;transition:all .25s;
+  }
+  .toggle button:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+  .toggle button.on{background:var(--ink);color:#fff;}
+  .toggle button .sub{
+    display:block;font-size:10px;font-weight:600;letter-spacing:.1em;
+    font-family:var(--mono);opacity:.7;margin-top:2px;
+  }
+
+  .daymeta{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 4px 10px;font-size:12px;color:var(--muted);
+  }
+  .daymeta b{color:var(--ink);font-weight:700;}
+  .progress{font-family:var(--mono);font-weight:700;}
+  .progress em{color:var(--band);font-style:normal;}
+
+  /* ---------- exercise card ---------- */
+  .card{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:20px;padding:16px;margin-bottom:14px;
+    display:grid;grid-template-columns:118px 1fr;gap:4px 14px;
+    overflow:hidden;
+  }
+  .fig{
+    grid-row:1 / span 3;align-self:start;
+    width:118px;height:118px;
+    background:var(--band-soft);border-radius:16px;
+    transition:background .3s;
+  }
+  .fig svg{width:100%;height:100%;display:block;}
+  .nm{font-size:17px;font-weight:800;letter-spacing:-0.01em;padding-top:2px;}
+  .nm .id{
+    font-size:11px;font-weight:700;color:var(--band);
+    font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;
+    margin-left:6px;transition:color .3s;
+  }
+  .rx{
+    font-family:var(--mono);font-size:12.5px;font-weight:700;
+    color:var(--ink);margin-top:4px;
+  }
+  .tip{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:6px;}
+
+  .dots{display:flex;gap:8px;margin-top:12px;align-items:center;}
+  .dot{
+    width:30px;height:30px;border-radius:10px;
+    border:2px solid var(--line);background:transparent;
+    cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:700;
+    color:var(--muted);transition:all .15s;
+  }
+  .dot:focus-visible{outline:2px solid var(--ink);outline-offset:2px;}
+  .dot.done{background:var(--band);border-color:var(--band);color:#fff;transform:scale(1.04);}
+  .dots .lbl{font-size:11px;color:var(--muted);margin-left:2px;font-family:var(--mono);}
+
+  /* SVG strokes */
+  .gnd{stroke:var(--line);stroke-width:3;stroke-linecap:round;}
+  .bone{stroke:var(--ink);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+  .hd{fill:var(--ink);}
+  .bnd{stroke:var(--band);stroke-width:4.5;stroke-linecap:round;fill:none;transition:stroke .3s;}
+  .prop{fill:none;stroke:var(--muted);stroke-width:4;stroke-linecap:round;}
+  .propfill{fill:var(--line);}
+
+  /* ---------- rest timer pill ---------- */
+  #rest{
+    position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(90px);
+    background:var(--ink);color:#fff;border:0;border-radius:999px;
+    padding:13px 26px;font-size:15px;font-weight:700;font-family:var(--mono);
+    box-shadow:0 10px 30px rgba(21,35,31,.35);
+    cursor:pointer;transition:transform .3s;z-index:50;
+    display:flex;gap:10px;align-items:center;
+  }
+  #rest.show{transform:translateX(-50%) translateY(0);}
+  #rest .b{color:var(--band);transition:color .3s;}
+  #rest.flash{animation:flash .5s 3;}
+  @keyframes flash{50%{background:var(--band);}}
+
+  footer{
+    text-align:center;font-size:11px;color:var(--muted);
+    font-family:var(--mono);padding:18px 0 30px;letter-spacing:.08em;
+  }
+  @media (prefers-reduced-motion:reduce){
+    .dot.done{transform:none;}
+    #rest{transition:none;}
+  }
+</style>
+</head>
+<body data-day="A">
+<div class="wrap">
+  <header>
+    <div class="kicker">HOME · NO DUMBBELL WEEK</div>
+    <h1>弹力带训练
+      <span class="id">LATIHAN BAND · A/B 交替 · 每周 3–4 次</span>
+    </h1>
+    <p class="note">每组做到力竭前 1–2 次。阻力不够：缩短带长 → 离心放慢 3 秒 → 组间休息压到 60 秒。</p>
+  </header>
+
+  <div class="toggle" role="tablist">
+    <button id="btnA" class="on" role="tab" aria-selected="true">A 日<span class="sub">下肢 + 推 · KAKI &amp; DORONG</span></button>
+    <button id="btnB" role="tab" aria-selected="false">B 日<span class="sub">拉 + 核心 · TARIK &amp; INTI</span></button>
+  </div>
+
+  <div class="daymeta">
+    <span id="dayTitle"><b>A 日</b> · 隔天交替</span>
+    <span class="progress" id="prog"></span>
+  </div>
+
+  <main id="list"></main>
+
+  <footer>SELESAI HARI INI? ISTIRAHAT ITU BAGIAN DARI LATIHAN.</footer>
+</div>
+
+<button id="rest" aria-live="polite">
+  <span>ISTIRAHAT</span><span class="b" id="restT">0:60</span>
+</button>
+
+<script>
+/* ============ exercise data ============
+   Every figure animates by morphing path "d" between pose a -> b.
+   Sub-path structure must match between a/b for SMIL morphing. */
+
+const EX = {
+A:[
+ {nm:"深蹲（踩带前提）", id:"JONGKOK", rx:"4 × 15–20", sets:4,
+  tip:"带子踩脚下、提到肩前。屁股向后坐，膝盖随脚尖。",
+  head:{a:[99,52],b:[101,84]},
+  morph:[
+   ["M100,178 L100,146 L102,112","M100,178 L82,150 L112,142"],
+   ["M102,112 L100,72","M112,142 L102,104"],
+   ["M100,72 L92,95 L85,82","M102,104 L94,124 L87,112"]
+  ],
+  band:["M97,178 Q90,130 85,82","M97,178 Q90,148 87,112"], dur:2.2},
+
+ {nm:"罗马尼亚硬拉", id:"ANGKAT PINGGUL", rx:"3 × 15", sets:3,
+  tip:"髋主导向后顶，背挺直，下放 3 秒感受腘绳肌。",
+  head:{a:[103,54],b:[130,86]},
+  morph:[
+   ["M100,178 L100,148 L100,114","M100,178 L96,150 L88,124"],
+   ["M100,114 L102,74","M88,124 L122,102"],
+   ["M102,74 L103,98 L104,122","M122,102 L123,122 L124,142"]
+  ],
+  band:["M103,178 Q104,150 104,122","M103,178 Q114,162 124,142"], dur:2.4},
+
+ {nm:"俯卧撑（带阻）", id:"PUSH-UP", rx:"4 × 力竭-2", sets:4,
+  tip:"太轻松就把带子绕过上背、两手压住两端。",
+  head:{a:[50,110],b:[48,144]},
+  morph:[
+   ["M62,120 L104,142 L150,168","M62,152 L104,162 L150,172"],
+   ["M62,120 L60,150 L58,178","M62,152 L76,168 L58,178"]
+  ],
+  band:["M56,174 Q54,104 96,128","M56,174 Q62,134 96,150"], dur:1.9},
+
+ {nm:"肩上推举", id:"TEKAN BAHU", rx:"3 × 12–15", sets:3,
+  tip:"双脚踩带站立，推到最高点但肘不锁死。",
+  head:{a:[100,60],b:[100,60]}, front:true,
+  morph:[
+   ["M100,80 L84,94 L86,68 M100,80 L116,94 L114,68",
+    "M100,80 L88,52 L87,26 M100,80 L112,52 L113,26"]
+  ],
+  band2:[["M88,178 Q84,120 86,68","M88,178 Q86,100 87,26"],
+         ["M112,178 Q116,120 114,68","M112,178 Q114,100 113,26"]], dur:2.0},
+
+ {nm:"侧平举", id:"ANGKAT SAMPING", rx:"3 × 15–20", sets:3,
+  tip:"微屈肘抬到与肩平，顶峰停 1 秒再慢放。",
+  head:{a:[100,60],b:[100,60]}, front:true,
+  morph:[
+   ["M100,80 L92,102 L86,122 M100,80 L108,102 L114,122",
+    "M100,80 L78,80 L58,78 M100,80 L122,80 L142,78"]
+  ],
+  band2:[["M88,178 Q86,150 86,122","M88,178 Q68,130 58,78"],
+         ["M112,178 Q114,150 114,122","M112,178 Q132,130 142,78"]], dur:2.1}
+],
+B:[
+ {nm:"弹力带划船", id:"MENDAYUNG", rx:"4 × 15（每侧）", sets:4,
+  tip:"带子绑门锚点，肘贴身向后拉，顶点挤背 1 秒。",
+  head:{a:[101,56],b:[101,56]}, anchor:"door",
+  statics:["M88,178 L94,148 L106,116 L112,148 L118,178"],
+  morph:[
+   ["M106,116 L102,76","M106,116 L102,76"],
+   ["M102,76 L80,86 L58,92","M102,76 L112,98 L96,104"]
+  ],
+  band:["M22,98 Q40,96 58,92","M22,98 Q58,104 96,104"], dur:1.8},
+
+ {nm:"直臂下拉", id:"TARIK LURUS", rx:"3 × 15", sets:3,
+  tip:"高位锚点，手臂伸直从前上方压到大腿，背阔肌发力。",
+  head:{a:[104,57],b:[104,57]}, anchor:"high",
+  statics:["M108,178 L108,146 L112,114"],
+  morph:[
+   ["M112,114 L106,76","M112,114 L106,76"],
+   ["M106,76 L82,64 L58,52","M106,76 L96,102 L86,128"]
+  ],
+  band:["M22,34 Q40,44 58,52","M22,34 Q52,82 86,128"], dur:2.0},
+
+ {nm:"站姿弯举", id:"TEKUK LENGAN", rx:"3 × 15–20", sets:3,
+  tip:"肘固定在身侧，举起 1 秒、下放 3 秒。",
+  head:{a:[100,54],b:[100,54]},
+  statics:["M100,178 L100,148 L100,114","M100,114 L100,74"],
+  morph:[
+   ["M100,74 L102,98 L106,122","M100,74 L102,98 L90,78"]
+  ],
+  band:["M103,178 Q105,150 106,122","M103,178 Q99,128 90,78"], dur:1.7},
+
+ {nm:"保加利亚分腿蹲", id:"SQUAT SPLIT", rx:"3 × 12 / 侧", sets:3,
+  tip:"后脚垫椅子/箱子，自重慢下快起，前腿主导。",
+  head:{a:[95,58],b:[95,84]}, anchor:"box",
+  morph:[
+   ["M82,178 L86,148 L98,118","M82,178 L72,156 L98,144"],
+   ["M98,118 L124,140 L150,146","M98,144 L122,162 L150,146"],
+   ["M98,118 L96,78","M98,144 L96,104"],
+   ["M96,78 L90,98 L98,106","M96,104 L90,120 L98,128"]
+  ], dur:2.2},
+
+ {nm:"平板支撑", id:"PAPAN", rx:"3 × 45–60 秒", sets:3,
+  tip:"收腹夹臀，肩-髋-踝一条线，正常呼吸。",
+  head:{a:[54,120],b:[54,120]}, plank:true,
+  statics:["M70,128 L108,136 L146,152 L152,172",
+           "M70,128 L70,170","M70,170 L46,170"],
+  morph:[], dur:3.0}
+]};
+
+/* ============ svg builder ============ */
+function buildSVG(ex){
+  const NS="http://www.w3.org/2000/svg";
+  const svg=document.createElementNS(NS,"svg");
+  svg.setAttribute("viewBox","0 0 200 200");
+  svg.setAttribute("aria-hidden","true");
+  const add=(tag,attrs,parent)=>{const el=document.createElementNS(NS,tag);
+    for(const k in attrs)el.setAttribute(k,attrs[k]);(parent||svg).appendChild(el);return el;};
+
+  add("line",{x1:14,y1:180,x2:186,y2:180,class:"gnd"});
+
+  if(ex.anchor==="door") add("line",{x1:20,y1:50,x2:20,y2:180,class:"prop"});
+  if(ex.anchor==="high"){add("line",{x1:20,y1:28,x2:20,y2:180,class:"prop"});
+                         add("line",{x1:14,y1:28,x2:34,y2:28,class:"prop"});}
+  if(ex.anchor==="box") add("rect",{x:138,y:148,width:34,height:32,rx:4,class:"propfill"});
+
+  const grp=add("g",{});
+  const animTo=(el,vals,dur)=>{
+    add("animate",{attributeName:"d",
+      values:vals[0]+";"+vals[1]+";"+vals[0],
+      dur:dur+"s",repeatCount:"indefinite",
+      calcMode:"spline",keyTimes:"0;0.5;1",
+      keySplines:"0.42 0 0.58 1;0.42 0 0.58 1"},el);
+  };
+
+  // bands first (behind body)
+  if(ex.band){const b=add("path",{d:ex.band[0],class:"bnd"},grp);animTo(b,ex.band,ex.dur);}
+  if(ex.band2)ex.band2.forEach(v=>{const b=add("path",{d:v[0],class:"bnd"},grp);animTo(b,v,ex.dur);});
+
+  if(ex.front){ // shared front-view legs+torso
+    add("path",{d:"M88,178 L92,142 L100,118 L108,142 L112,178",class:"bone"},grp);
+    add("path",{d:"M100,118 L100,80",class:"bone"},grp);
+  }
+  (ex.statics||[]).forEach(d=>add("path",{d,class:"bone"},grp));
+  ex.morph.forEach(v=>{const p=add("path",{d:v[0],class:"bone"},grp);animTo(p,v,ex.dur);});
+
+  const hd=add("circle",{cx:ex.head.a[0],cy:ex.head.a[1],r:10,class:"hd"},grp);
+  if(ex.head.a[0]!==ex.head.b[0]||ex.head.a[1]!==ex.head.b[1]){
+    ["cx","cy"].forEach((attr,i)=>add("animate",{attributeName:attr,
+      values:ex.head.a[i]+";"+ex.head.b[i]+";"+ex.head.a[i],
+      dur:ex.dur+"s",repeatCount:"indefinite",
+      calcMode:"spline",keyTimes:"0;0.5;1",
+      keySplines:"0.42 0 0.58 1;0.42 0 0.58 1"},hd));
+  }
+  if(ex.plank){ // subtle breathing bob
+    add("animateTransform",{attributeName:"transform",type:"translate",
+      values:"0,0;0,2.5;0,0",dur:"3s",repeatCount:"indefinite"},grp);
+  }
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){
+    requestAnimationFrame(()=>svg.pauseAnimations&&svg.pauseAnimations());
+  }
+  return svg;
+}
+
+/* ============ state ============ */
+const KEY="band-latihan-v1";
+const today=new Date().toISOString().slice(0,10);
+let st;
+try{st=JSON.parse(localStorage.getItem(KEY))||{};}catch(e){st={};}
+if(st.date!==today)st={date:today,day:st.day||"A",done:{A:{},B:{}}};
+if(!st.done)st.done={A:{},B:{}};
+const save=()=>localStorage.setItem(KEY,JSON.stringify(st));
+
+/* ============ render ============ */
+const list=document.getElementById("list");
+function render(){
+  const day=st.day;
+  document.body.dataset.day=day;
+  document.getElementById("btnA").classList.toggle("on",day==="A");
+  document.getElementById("btnB").classList.toggle("on",day==="B");
+  document.getElementById("btnA").setAttribute("aria-selected",day==="A");
+  document.getElementById("btnB").setAttribute("aria-selected",day==="B");
+  document.getElementById("dayTitle").innerHTML=
+    day==="A"?"<b>A 日</b> · 下肢 + 推":"<b>B 日</b> · 拉 + 核心";
+
+  list.innerHTML="";
+  EX[day].forEach((ex,i)=>{
+    const card=document.createElement("article");
+    card.className="card";
+    const fig=document.createElement("div");
+    fig.className="fig";fig.appendChild(buildSVG(ex));
+    card.appendChild(fig);
+
+    const nm=document.createElement("div");nm.className="nm";
+    nm.innerHTML=ex.nm+'<span class="id">'+ex.id+"</span>";
+    const rx=document.createElement("div");rx.className="rx";rx.textContent=ex.rx;
+    const tip=document.createElement("div");tip.className="tip";tip.textContent=ex.tip;
+    card.append(nm,rx,tip);
+
+    const dots=document.createElement("div");dots.className="dots";
+    dots.style.gridColumn="1 / -1";
+    const doneArr=st.done[day][i]||(st.done[day][i]=Array(ex.sets).fill(false));
+    for(let s=0;s<ex.sets;s++){
+      const b=document.createElement("button");
+      b.className="dot"+(doneArr[s]?" done":"");
+      b.textContent=s+1;
+      b.setAttribute("aria-label",ex.nm+" 第"+(s+1)+"组");
+      b.onclick=()=>{
+        doneArr[s]=!doneArr[s];
+        b.classList.toggle("done",doneArr[s]);
+        save();updateProg();
+        if(doneArr[s])startRest();
+      };
+      dots.appendChild(b);
+    }
+    const lbl=document.createElement("span");lbl.className="lbl";lbl.textContent="SET";
+    dots.appendChild(lbl);
+    card.appendChild(dots);
+    list.appendChild(card);
+  });
+  updateProg();
+}
+function updateProg(){
+  const day=st.day;let d=0,t=0;
+  EX[day].forEach((ex,i)=>{t+=ex.sets;
+    (st.done[day][i]||[]).forEach(v=>{if(v)d++;});});
+  document.getElementById("prog").innerHTML="<em>"+d+"</em> / "+t+" SET";
+}
+document.getElementById("btnA").onclick=()=>{st.day="A";save();render();};
+document.getElementById("btnB").onclick=()=>{st.day="B";save();render();};
+
+/* ============ rest timer ============ */
+const pill=document.getElementById("rest"),tEl=document.getElementById("restT");
+let tick=null;
+function startRest(){
+  clearInterval(tick);
+  let s=60;
+  pill.classList.remove("flash");
+  pill.classList.add("show");
+  const draw=()=>{tEl.textContent="0:"+String(s).padStart(2,"0");};
+  draw();
+  tick=setInterval(()=>{
+    s--;draw();
+    if(s<=0){clearInterval(tick);tEl.textContent="GO!";
+      pill.classList.add("flash");
+      setTimeout(()=>pill.classList.remove("show"),2200);}
+  },1000);
+}
+pill.onclick=()=>{clearInterval(tick);pill.classList.remove("show");};
+
+render();
+</script>
+</body>
+</html>
